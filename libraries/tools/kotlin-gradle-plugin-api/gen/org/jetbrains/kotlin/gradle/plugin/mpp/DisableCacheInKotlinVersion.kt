@@ -71,4 +71,9 @@ public sealed class DisableCacheInKotlinVersion private constructor(
    * Represents the Kotlin version constant for 2.4.20.
    */
   public object `2_4_20` : DisableCacheInKotlinVersion(2, 4, 20)
+
+  /**
+   * Represents the Kotlin version constant for 2.5.0.
+   */
+  public object `2_5_0` : DisableCacheInKotlinVersion(2, 5, 0)
 }
