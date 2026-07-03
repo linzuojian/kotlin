@@ -199,21 +199,15 @@ internal class ExportedElement(
         val original = descriptor.original as FunctionDescriptor
 
         @OptIn(K1Deprecation::class)
-        val returnedType = when {
-            original is ConstructorDescriptor -> typeTranslator.builtIns.unitType
-            else -> original.returnType!!
-        }
-
-        @OptIn(K1Deprecation::class)
         val params = ArrayList(original.allParameters
                 .filter { it.type.includeToSignature() }
                 .map {
                     typeTranslator.translateTypeBridge(it.type)
                 })
-        if (typeTranslator.isMappedToReference(returnedType) || typeTranslator.isMappedToString(returnedType)) {
+        if (original !is ConstructorDescriptor && (typeTranslator.isMappedToReference(original.returnType!!) || typeTranslator.isMappedToString(original.returnType!!))) {
             params += "KObjHeader**"
         }
-        return listOf(typeTranslator.translateTypeBridge(returnedType)) + params
+        return listOf(if (original is ConstructorDescriptor) "void" else typeTranslator.translateTypeBridge(original.returnType!!)) + params
     }
 
 

@@ -13,7 +13,6 @@ import org.jetbrains.kotlin.backend.common.phaser.PhaseEngine
 import org.jetbrains.kotlin.backend.konan.*
 import org.jetbrains.kotlin.backend.konan.driver.phases.*
 import org.jetbrains.kotlin.backend.konan.llvm.parseBitcodeFile
-import org.jetbrains.kotlin.builtins.konan.KonanBuiltIns
 import org.jetbrains.kotlin.cli.CliDiagnostics
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.report
@@ -159,7 +158,6 @@ internal class NativeCompilerDriver(private val performanceManager: PerformanceM
         engine.runBackend(backendContext, linkKlibsOutput.irModule, performanceManager)
     }
 
-    @OptIn(K1Deprecation::class)
     private fun createBackendContext(
             config: NativeSecondStageCompilationConfig,
             frontendOutput: FrontendPhaseOutput.Full,
@@ -168,7 +166,6 @@ internal class NativeCompilerDriver(private val performanceManager: PerformanceM
     ) = Context(
             config,
             frontendOutput.moduleDescriptor.getIncludedLibraryDescriptors(config).toSet() + frontendOutput.moduleDescriptor,
-            frontendOutput.moduleDescriptor.builtIns as KonanBuiltIns,
             linkKlibsOutput.irBuiltIns,
             linkKlibsOutput.irModules,
             linkKlibsOutput.irLinker,

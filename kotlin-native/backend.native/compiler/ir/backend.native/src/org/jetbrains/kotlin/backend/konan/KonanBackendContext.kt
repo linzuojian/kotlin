@@ -5,13 +5,11 @@
 
 package org.jetbrains.kotlin.backend.konan
 
-import org.jetbrains.kotlin.K1Deprecation
 import org.jetbrains.kotlin.backend.common.CommonBackendContext
 import org.jetbrains.kotlin.backend.common.InlineClassesUtils
 import org.jetbrains.kotlin.backend.common.ir.KlibSharedVariablesManager
 import org.jetbrains.kotlin.backend.konan.driver.BasicNativeBackendPhaseContext
 import org.jetbrains.kotlin.backend.konan.ir.BackendNativeSymbols
-import org.jetbrains.kotlin.builtins.konan.KonanBuiltIns
 import org.jetbrains.kotlin.descriptors.ValueClassBackendAgnosticApi
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrFactory
@@ -24,9 +22,6 @@ internal abstract class KonanBackendContext(config: NativeSecondStageCompilation
         override fun isClassInlineLike(klass: IrClass): Boolean =
                 klass.isInlineClass(treatCompatibleFullValueClassesAsInline = true)
     }
-
-    @OptIn(K1Deprecation::class)
-    abstract val builtIns: KonanBuiltIns
 
     abstract override val symbols: BackendNativeSymbols
 

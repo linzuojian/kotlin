@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.backend.konan.driver.phases
 
-import org.jetbrains.kotlin.K1Deprecation
 import org.jetbrains.kotlin.backend.common.phaser.createSimpleNamedCompilerPhase
 import org.jetbrains.kotlin.backend.konan.LinkKlibsContext
 import org.jetbrains.kotlin.backend.konan.cexport.*
@@ -14,6 +13,7 @@ import org.jetbrains.kotlin.backend.konan.cexport.CAdapterExportedElements
 import org.jetbrains.kotlin.backend.konan.cexport.CAdapterGenerator
 import org.jetbrains.kotlin.backend.konan.cexport.CAdapterTypeTranslator
 import org.jetbrains.kotlin.backend.konan.driver.NativeBackendPhaseContext
+import org.jetbrains.kotlin.ir.IrBuiltIns
 import java.io.File
 
 internal val BuildCExports = createSimpleNamedCompilerPhase<LinkKlibsContext, FrontendPhaseOutput.Full, CAdapterExportedElements>(
@@ -22,13 +22,13 @@ internal val BuildCExports = createSimpleNamedCompilerPhase<LinkKlibsContext, Fr
 ) { context, input ->
     val prefix = context.config.fullExportedNamePrefix.replace("-|\\.".toRegex(), "_")
 
-    @OptIn(K1Deprecation::class)
-    val typeTranslator = CAdapterTypeTranslator(prefix, context.builtIns)
+    val typeTranslator = CAdapterTypeTranslator(prefix)
     CAdapterGenerator(context, typeTranslator).buildExports(input.moduleDescriptor)
 }
 
 internal data class CExportGenerateApiInput(
         val elements: CAdapterExportedElements,
+        val irBuiltIns: IrBuiltIns,
         val headerFile: File,
         val defFile: File?,
         val cppAdapterFile: File,
@@ -43,6 +43,7 @@ internal val CExportGenerateApiPhase = createSimpleNamedCompilerPhase<NativeBack
             defFile = input.defFile,
             cppAdapterFile = input.cppAdapterFile,
             target = context.config.target,
+            irBuiltIns = input.irBuiltIns,
     ).makeGlobalStruct()
 }
 

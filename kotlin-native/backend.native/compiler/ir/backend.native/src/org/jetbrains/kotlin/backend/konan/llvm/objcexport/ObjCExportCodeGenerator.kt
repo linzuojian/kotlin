@@ -24,8 +24,8 @@ import org.jetbrains.kotlin.backend.konan.lower.getObjectClassInstanceFunction
 import org.jetbrains.kotlin.backend.konan.objcexport.*
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.ir.IrBasedFunctionFactory.Companion.isFunctionInterfaceFile
+import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrVararg
@@ -533,7 +533,7 @@ internal class ObjCExportCodeGenerator(
     }
 
     // TODO: consider including this into ObjCExportCodeSpec.
-    @OptIn(K1Deprecation::class)
+    @OptIn(ObsoleteDescriptorBasedAPI::class)
     private val objCClassForAny = ObjCClassForKotlinClass(
             namer.kotlinAnyName.binaryName,
             irBuiltIns.anyClass,
@@ -541,11 +541,7 @@ internal class ObjCExportCodeGenerator(
                 val name = Name.identifier(nameString)
 
                 val irFunction = irBuiltIns.anyClass.owner.simpleFunctions().single { it.name == name }
-
-                val descriptor = context.builtIns.any.unsubstitutedMemberScope
-                        .getContributedFunctions(name, NoLookupLocation.FROM_BACKEND).single()
-
-                val baseMethod = createObjCMethodSpecBaseMethod(mapper, namer, irFunction.symbol, descriptor)
+                val baseMethod = createObjCMethodSpecBaseMethod(mapper, namer, irFunction.symbol, irFunction.descriptor)
                 ObjCMethodForKotlinMethod(baseMethod)
             },
             categoryMethods = emptyList(),

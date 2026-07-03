@@ -26,15 +26,10 @@ import org.jetbrains.kotlin.resolve.CleanableBindingContext
 @OptIn(K1Deprecation::class)
 internal class LinkKlibsContextImpl(
         config: NativeSecondStageCompilationConfig,
-        private val moduleDescriptor: ModuleDescriptor,
         override val bindingContext: BindingContext,
 ) : BasicNativeBackendPhaseContext(config), LinkKlibsContext {
     // TODO: Invalidate properly in dispose method.
     override val symbolTable = SymbolTable(KonanIdSignaturer(KonanManglerDesc), IrFactoryImpl)
-
-    override val builtIns: KonanBuiltIns by lazy(LazyThreadSafetyMode.PUBLICATION) {
-        moduleDescriptor.builtIns as KonanBuiltIns
-    }
 
     override fun dispose() {
         val originalBindingContext = bindingContext as? CleanableBindingContext

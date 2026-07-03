@@ -5,9 +5,7 @@
 
 package org.jetbrains.kotlin.backend.konan.cexport
 
-import org.jetbrains.kotlin.builtins.UnsignedType
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.findClassAcrossModuleDependencies
 import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.types.KotlinType
@@ -16,7 +14,10 @@ import org.jetbrains.kotlin.types.typeUtil.isUnit
 import org.jetbrains.kotlin.types.typeUtil.makeNullable
 import java.io.PrintWriter
 import java.io.File
-import org.jetbrains.kotlin.K1Deprecation
+import org.jetbrains.kotlin.ir.IrBuiltIns
+import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
+import org.jetbrains.kotlin.ir.types.toKotlinType
+import org.jetbrains.kotlin.types.SimpleType
 
 /**
  * Third phase of C export:
@@ -34,27 +35,18 @@ internal class CAdapterApiExporter(
         private val defFile: File?,
         private val cppAdapterFile: File,
         private val target: KonanTarget,
+        irBuiltIns: IrBuiltIns,
 ) {
     private val typeTranslator = elements.typeTranslator
-
-    @OptIn(K1Deprecation::class)
-    private val builtIns = elements.typeTranslator.builtIns
 
     private val prefix = elements.typeTranslator.prefix
     private lateinit var outputStreamWriter: PrintWriter
 
     // Primitive built-ins and unsigned types
-    @OptIn(K1Deprecation::class)
-    private val predefinedTypes = listOf(
-            builtIns.byteType, builtIns.shortType,
-            builtIns.intType, builtIns.longType,
-            builtIns.floatType, builtIns.doubleType,
-            builtIns.charType, builtIns.booleanType,
-            builtIns.unitType
-    ) + UnsignedType.values().map {
-        // Unfortunately, `context.symbols` and `context.irBuiltins` are not initialized, so `context.symbols.ubyte`, etc, are unreachable.
-        builtIns.builtInsModule.findClassAcrossModuleDependencies(it.classId)!!.defaultType
-    }
+    @OptIn(ObsoleteDescriptorBasedAPI::class)
+    private val predefinedTypes = (irBuiltIns.primitiveIrTypes + listOf(irBuiltIns.ubyteType, irBuiltIns.ushortType, irBuiltIns.uintType, irBuiltIns.ulongType))
+            .map { it.toKotlinType() as SimpleType }
+
 
     private fun output(string: String, indent: Int = 0) {
         if (indent != 0) outputStreamWriter.print("  " * indent)

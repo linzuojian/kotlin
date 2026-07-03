@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.ir.util.SymbolTable
 import org.jetbrains.kotlin.konan.config.fakeOverrideValidator
 import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.isHeader
+import org.jetbrains.kotlin.library.isNativeStdlib
 import org.jetbrains.kotlin.library.metadata.DeserializedKlibModuleOrigin
 import org.jetbrains.kotlin.library.metadata.KlibModuleOrigin
 import org.jetbrains.kotlin.library.metadata.impl.isForwardDeclarationModule
@@ -37,7 +38,6 @@ import org.jetbrains.kotlin.library.metadata.kotlinLibrary
 import org.jetbrains.kotlin.library.uniqueName
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CommonCompilerDeserializationConfiguration
-import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import org.jetbrains.kotlin.serialization.deserialization.DeserializationConfiguration
 import org.jetbrains.kotlin.utils.DFS
 import org.jetbrains.kotlin.utils.mapToSetOrEmpty
@@ -47,14 +47,7 @@ import org.jetbrains.kotlin.io.canonicalPathString
 internal interface LinkKlibsContext : NativeBackendPhaseContext {
     val symbolTable: SymbolTable?
 
-    @OptIn(K1Deprecation::class)
-    val builtIns: KonanBuiltIns
-
     val bindingContext: BindingContext
-
-    @OptIn(K1Deprecation::class)
-    val stdlibModule: ModuleDescriptor
-        get() = this.builtIns.any.module
 }
 
 data class LinkKlibsInput(
@@ -86,10 +79,6 @@ internal fun LinkKlibsContext.linkKlibs(
         moduleDescriptor.allDependencyModules.single { module -> module.konanLibrary == it }
     }
 
-    val stdlibIsCached = stdlibModule.konanLibrary?.let { config.cachedLibraries.isLibraryCached(it) } == true
-    val stdlibIsBeingCached = libraryToCacheModule == stdlibModule
-    require(!(stdlibIsCached && stdlibIsBeingCached)) { "The cache for stdlib is already built" }
-
     val mainModule = IrModuleFragmentImpl(moduleDescriptor)
     val irLinker = createIrLinker(moduleDescriptor, libraryToCacheModule)
     deserializeDependencies(moduleDescriptor, irLinker)
@@ -118,6 +107,12 @@ internal fun LinkKlibsContext.linkKlibs(
     // This concerns in the first place global initializers order for the eager initialization strategy,
     // where the files are being initialized in order one by one.
     modules.values.forEach { module -> module.files.sortBy { it.fileEntry.name } }
+
+    val stdlibModule = modules.values.singleOrNull { it.kotlinLibrary?.isNativeStdlib == true }
+    val stdlibLibrary = stdlibModule?.kotlinLibrary
+    val stdlibIsCached = stdlibLibrary != null && config.cachedLibraries.isLibraryCached(stdlibLibrary)
+    val stdlibIsBeingCached = libraryToCache?.klib == stdlibLibrary
+    require(!(stdlibIsCached && stdlibIsBeingCached)) { "The cache for stdlib is already built" }
 
     if (stdlibIsBeingCached) {
         val maxArity = 255 // See [BuiltInFictitiousFunctionClassFactory].

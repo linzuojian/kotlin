@@ -63,7 +63,7 @@ internal fun <T> PhaseEngine<NativeBackendPhaseContext>.linkKlibs(
         produceAdditionalOutput: (PhaseEngine<out LinkKlibsContext>) -> T
 ): Pair<LinkKlibsOutput, T> {
     val config = this.context.config
-    val psiToIrContext = LinkKlibsContextImpl(config, frontendOutput.moduleDescriptor, frontendOutput.bindingContext)
+    val psiToIrContext = LinkKlibsContextImpl(config, frontendOutput.bindingContext)
     val [linkKlibsOutput, additionalOutput] = useContext(psiToIrContext) { psiToIrEngine ->
         val additionalOutput = produceAdditionalOutput(psiToIrEngine)
         val linkKlibsInput = LinkKlibsInput(frontendOutput.moduleDescriptor)
@@ -467,6 +467,7 @@ internal fun PhaseEngine<NativeGenerationState>.runBackendCodegen(module: IrModu
         require(cExportFiles != null)
         val input = CExportGenerateApiInput(
                 context.context.cAdapterExportedElements!!,
+                irBuiltIns = irBuiltIns,
                 headerFile = cExportFiles.header,
                 defFile = cExportFiles.def,
                 cppAdapterFile = cExportFiles.cppAdapter
