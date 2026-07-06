@@ -26,7 +26,7 @@ import org.jetbrains.org.objectweb.asm.commons.Method
 private var IrFunction.cachedJvmSignature: Method? by irAttribute(copyByDefault = false)
 
 class BridgeLoweringCache(private val context: JvmBackendContext) {
-    private val specialBridgeMethods = SpecialBridgeMethods(context)
+    private val specialBridgeMethods = SpecialBridgeMethods(context.irBuiltIns)
 
     fun computeJvmMethod(function: IrFunction): Method =
         function::cachedJvmSignature.getOrSetIfNull {

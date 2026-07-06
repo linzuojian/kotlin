@@ -21,8 +21,7 @@ import org.jetbrains.kotlin.backend.konan.llvm.computeFunctionName
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.IrStatement
-import org.jetbrains.kotlin.K1Deprecation
-import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
+import org.jetbrains.kotlin.backend.common.lower.SpecialMethodWithDefaultInfo
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.declarations.*
@@ -40,14 +39,9 @@ import org.jetbrains.kotlin.ir.types.isNullableAny
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
-import org.jetbrains.kotlin.load.java.BuiltinMethodsWithSpecialGenericSignature
-import org.jetbrains.kotlin.load.java.SpecialGenericSignatures
 import org.jetbrains.kotlin.utils.addToStdlib.getOrSetIfNull
 
 private var IrFunction.bridges: MutableMap<BridgeDirections, IrSimpleFunction>? by irAttribute(copyByDefault = false)
-
-@OptIn(ObsoleteDescriptorBasedAPI::class, K1Deprecation::class)
-internal fun IrFunction.getDefaultValueForOverriddenBuiltinFunction() = BuiltinMethodsWithSpecialGenericSignature.getDefaultValueForOverriddenBuiltinFunction(descriptor)
 
 internal class BridgesSupport(val irBuiltIns: IrBuiltIns, val symbols: BackendNativeSymbols, val irFactory: IrFactory) {
     fun getBridge(overriddenFunction: OverriddenFunctionInfo): IrSimpleFunction {
@@ -217,12 +211,12 @@ internal class BridgesBuilding(val context: Context) : ClassLoweringPass {
                 return declaration
             }
 
-            override fun visitFunction(declaration: IrFunction): IrStatement {
+            override fun visitSimpleFunction(declaration: IrSimpleFunction): IrStatement {
                 declaration.transformChildrenVoid(this)
 
                 val body = declaration.body ?: return declaration
 
-                val typeSafeBarrierDescription = declaration.getDefaultValueForOverriddenBuiltinFunction()
+                val typeSafeBarrierDescription = context.specialBridgeMethods.findSpecialWithOverride(declaration)?.second
                 if (typeSafeBarrierDescription == null || builtBridges.contains(declaration))
                     return declaration
 
@@ -271,16 +265,12 @@ private fun IrBuilderWithScope.irConst(value: Any?) = when (value) {
     else       -> TODO()
 }
 
-private fun IrBlockBodyBuilder.buildTypeSafeBarrier(function: IrFunction,
-                                                    originalFunction: IrFunction,
-                                                    typeSafeBarrierDescription: SpecialGenericSignatures.TypeSafeBarrierDescription) {
-    val parameters = function.nonDispatchParameters
-    val originalParameters = originalFunction.nonDispatchParameters
-    for (i in parameters.indices) {
-        if (!typeSafeBarrierDescription.checkParameter(i))
-            continue
-
-        val type = originalParameters[i].type.eraseTypeParameters()
+private fun IrBlockBodyBuilder.buildTypeSafeBarrier(function: IrSimpleFunction,
+                                                    originalFunction: IrSimpleFunction,
+                                                    typeSafeBarrierDescription: SpecialMethodWithDefaultInfo) {
+    // skip dispatch receiver, and than check required number of first parameters
+    for (i in function.parameters.indices.drop(1).take(typeSafeBarrierDescription.argumentsToCheck)) {
+        val type = originalFunction.parameters[i].type.eraseTypeParameters()
         // Note: erasing to single type is not entirely correct if type parameter has multiple upper bounds.
         // In this case the compiler could generate multiple type checks, one for each upper bound.
         // But let's keep it simple here for now; JVM backend doesn't do this anyway.
@@ -288,10 +278,8 @@ private fun IrBlockBodyBuilder.buildTypeSafeBarrier(function: IrFunction,
         if (!type.isNullableAny()) {
             // Here, we can't trust value parameter type until we check it, because of @UnsafeVariance
             // So we add implicit cast to avoid type check optimization
-            +returnIfBadType(irImplicitCast(irGet(parameters[i]), context.irBuiltIns.anyNType), type,
-                    if (typeSafeBarrierDescription == SpecialGenericSignatures.TypeSafeBarrierDescription.MAP_GET_OR_DEFAULT)
-                        irGet(parameters[1])
-                    else irConst(typeSafeBarrierDescription.defaultValue)
+            +returnIfBadType(irImplicitCast(irGet(function.parameters[i]), context.irBuiltIns.anyNType), type,
+                    typeSafeBarrierDescription.defaultValueGenerator(function)
             )
         }
     }
@@ -309,7 +297,7 @@ private fun Context.buildBridge(startOffset: Int, endOffset: Int,
 
     val irBuilder = createIrBuilder(bridge.symbol, startOffset, endOffset)
     bridge.body = irBuilder.irBlockBody(bridge) {
-        val typeSafeBarrierDescription = overriddenFunction.overriddenFunction.getDefaultValueForOverriddenBuiltinFunction()
+        val typeSafeBarrierDescription = specialBridgeMethods.getSpecialMethodInfo(overriddenFunction.overriddenFunction)
         typeSafeBarrierDescription?.let { buildTypeSafeBarrier(bridge, overriddenFunction.function, it) }
 
         val delegatingCall = IrCallImpl.fromSymbolOwner(

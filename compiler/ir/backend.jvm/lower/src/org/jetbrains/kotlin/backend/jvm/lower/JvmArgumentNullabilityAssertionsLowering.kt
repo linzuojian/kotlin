@@ -40,7 +40,7 @@ internal class JvmArgumentNullabilityAssertionsLowering(context: JvmBackendConte
     private val isCallAssertionsDisabled = context.config.isCallAssertionsDisabled
     private val isReceiverAssertionsDisabled = context.config.isReceiverAssertionsDisabled
 
-    private val specialBridgeMethods = SpecialBridgeMethods(context)
+    private val specialBridgeMethods = SpecialBridgeMethods(context.irBuiltIns)
 
     override fun lower(irFile: IrFile) = irFile.transformChildren(this, AssertionScope.Enabled)
 

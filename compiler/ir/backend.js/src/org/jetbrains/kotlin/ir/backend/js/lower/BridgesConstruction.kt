@@ -45,7 +45,7 @@ import org.jetbrains.kotlin.utils.toSmartList
  */
 abstract class BridgesConstruction(private val context: JsCommonBackendContext) : DeclarationTransformer {
 
-    private val specialBridgeMethods = SpecialBridgeMethods(context)
+    private val specialBridgeMethods = SpecialBridgeMethods(context.irBuiltIns)
 
     abstract fun getFunctionSignature(function: IrSimpleFunction): Any
 

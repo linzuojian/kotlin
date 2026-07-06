@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.backend.konan.llvm.isExported
 import org.jetbrains.kotlin.backend.konan.llvm.localHash
 import org.jetbrains.kotlin.backend.konan.lower.DECLARATION_ORIGIN_BRIDGE_METHOD
 import org.jetbrains.kotlin.backend.konan.lower.bridgeTarget
-import org.jetbrains.kotlin.backend.konan.lower.getDefaultValueForOverriddenBuiltinFunction
 import org.jetbrains.kotlin.backend.konan.lower.isEagerStaticInitializer
 import org.jetbrains.kotlin.backend.konan.util.CustomBitSet
 import org.jetbrains.kotlin.descriptors.Modality
@@ -663,9 +662,7 @@ internal object DataFlowIR {
                     val isAbstract = it.modality == Modality.ABSTRACT
                     val irClass = it.parent as? IrClass
                     val bridgeTarget = it.bridgeTarget
-                    val isSpecialBridge = bridgeTarget.let {
-                        it != null && it.getDefaultValueForOverriddenBuiltinFunction() != null
-                    }
+                    val isSpecialBridge = bridgeTarget?.let { context.specialBridgeMethods.getSpecialMethodInfo(it) } != null
                     val bridgeTargetSymbol = if (isSpecialBridge || bridgeTarget == null) null else mapFunction(bridgeTarget)
                     val placeToFunctionsTable = !isAbstract && irClass != null
                             && (it.isOverridableOrOverrides || bridgeTarget != null || function.isSpecial || !irClass.isFinalClass)

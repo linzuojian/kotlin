@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.backend.konan
 import llvm.LLVMTypeRef
 import org.jetbrains.kotlin.config.LoggingContext
 import org.jetbrains.kotlin.backend.common.linkage.partial.createPartialLinkageSupportForLowerings
+import org.jetbrains.kotlin.backend.common.lower.SpecialBridgeMethods
 import org.jetbrains.kotlin.backend.konan.cexport.CAdapterExportedElements
 import org.jetbrains.kotlin.backend.konan.ir.*
 import org.jetbrains.kotlin.backend.konan.llvm.KonanMetadata
@@ -57,6 +58,7 @@ internal class Context(
     val bridgesSupport by lazy { BridgesSupport(irBuiltIns, symbols, irFactory) }
     val enumsSupport by lazy { EnumsSupport(irBuiltIns, irFactory) }
     val cachesAbiSupport by lazy { CachesAbiSupport(irFactory) }
+    val specialBridgeMethods by lazy { SpecialBridgeMethods(irBuiltIns) }
 
     val moduleDeserializerProvider by lazy {
         ModuleDeserializerProvider(config.libraryToCache, config.cachedLibraries, irLinker)
