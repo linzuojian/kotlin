@@ -131,6 +131,12 @@ internal expect class ExceptionInInitializerError : Error {
     constructor(cause: Throwable?)
 }
 
+//@SinceKotlin("2.5") // TODO: Use 2.5 after branching
+internal expect class NoClassDefFoundError : Error {
+    constructor()
+    constructor(message: String?)
+}
+
 /**
  * Returns the detailed description of this throwable with its stack trace.
  *

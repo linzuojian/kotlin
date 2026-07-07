@@ -100,3 +100,9 @@ internal actual open class ExceptionInInitializerError : Error {
     actual constructor(message: String?) : super(message)
     actual constructor(cause: Throwable?) : super(null, cause)
 }
+
+//@SinceKotlin("2.5") // TODO: Use 2.5 after branching
+internal actual open class NoClassDefFoundError : Error {
+    actual constructor() : super()
+    actual constructor(message: String?) : super(message)
+}

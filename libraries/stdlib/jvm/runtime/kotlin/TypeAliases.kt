@@ -25,6 +25,8 @@ package kotlin
 
 //@SinceKotlin("2.5") // TODO: Use 2.5 after branching
 internal actual typealias ExceptionInInitializerError = java.lang.ExceptionInInitializerError
+//@SinceKotlin("2.5") // TODO: Use 2.5 after branching
+internal actual typealias NoClassDefFoundError = java.lang.NoClassDefFoundError
 
 @SinceKotlin("1.1") public actual typealias NoSuchElementException = java.util.NoSuchElementException
 
