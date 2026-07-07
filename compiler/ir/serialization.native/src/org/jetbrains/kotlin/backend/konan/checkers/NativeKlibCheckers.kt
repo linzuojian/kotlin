@@ -43,7 +43,7 @@ object NativeKlibCheckers {
             }
 
             override fun visitInlinedFunctionBlock(inlinedBlock: IrInlinedFunctionBlock) {
-                diagnosticContext.witInlineScope(inlinedBlock) {
+                diagnosticContext.withInlineScope(inlinedBlock) {
                     super.visitInlinedFunctionBlock(inlinedBlock)
                 }
             }

@@ -42,7 +42,7 @@ class CommonKlibDiagnosticContext(val compilerConfiguration: CompilerConfigurati
         }
     }
 
-    fun witInlineScope(inlineBlock: IrInlinedFunctionBlock, f: () -> Unit) {
+    fun withInlineScope(inlineBlock: IrInlinedFunctionBlock, f: () -> Unit) {
         try {
             inlineBlockStack.add(inlineBlock)
             f()

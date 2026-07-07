@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.ir.util.findAnnotation
 import org.jetbrains.kotlin.ir.util.getConstArgument
 import org.jetbrains.kotlin.ir.util.getPackageFragment
 import org.jetbrains.kotlin.ir.util.getSinglePropertyReference
+import org.jetbrains.kotlin.ir.util.render
 import org.jetbrains.kotlin.name.FqName
 
 object NativeVolatileCheck : NativeKlibExpressionsChecker<IrCall> {
@@ -41,8 +42,9 @@ object NativeVolatileCheck : NativeKlibExpressionsChecker<IrCall> {
     override fun check(expression: IrCall, context: CommonKlibDiagnosticContext, reporter: IrDiagnosticReporter) {
         if (!expression.isVolatileIntrinsic()) return
 
-        val extensionReceiver =
-            expression.arguments[expression.symbol.owner.parameters.indexOfFirst { it.kind == IrParameterKind.ExtensionReceiver }]
+        val extensionReceiverIndex = expression.symbol.owner.parameters.indexOfFirst { it.kind == IrParameterKind.ExtensionReceiver }
+        require(extensionReceiverIndex != -1) { "Extension receiver index not found for call ${expression.render()}" }
+        val extensionReceiver = expression.arguments[extensionReceiverIndex]
         val reference = getSinglePropertyReference(extensionReceiver, null) ?: return
         val property = (reference.reflectionTargetSymbol as? IrPropertySymbol)?.owner ?: return
         // If property lies in another module, then it will have `IrExternalPackageFragment` instead of `IrFile`
