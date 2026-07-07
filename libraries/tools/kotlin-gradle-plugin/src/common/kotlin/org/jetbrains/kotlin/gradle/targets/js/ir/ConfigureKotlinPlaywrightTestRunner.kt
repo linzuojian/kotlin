@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.gradle.targets.KotlinTargetSideEffect
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinBrowserTestRunnerDsl
 import org.jetbrains.kotlin.gradle.targets.js.testing.playwright.KotlinPlaywrightJsTestFramework
 import org.jetbrains.kotlin.gradle.targets.js.testing.playwright.PlaywrightBrowserInstall
+import org.jetbrains.kotlin.gradle.targets.wasm.internal.isWasm
 import org.jetbrains.kotlin.gradle.tasks.registerTask
 import kotlin.time.toJavaDuration
 
@@ -22,6 +23,11 @@ internal val ConfigureKotlinPlaywrightTestRunner = KotlinTargetSideEffect { targ
     if (target !is KotlinJsIrTarget) return@KotlinTargetSideEffect
 
     val project = target.project
+
+    if (target.isWasm) {
+        project.reportDiagnostic(KotlinToolingDiagnostics.NewJsTestDslNotSupportedForWasmError())
+        return@KotlinTargetSideEffect
+    }
 
     project.launchInStage(KotlinPluginLifecycle.Stage.AfterEvaluateBuildscript) {
         val browser = target.subTargets.filterIsInstance<KotlinBrowserJsIr>().singleOrNull() ?: return@launchInStage
