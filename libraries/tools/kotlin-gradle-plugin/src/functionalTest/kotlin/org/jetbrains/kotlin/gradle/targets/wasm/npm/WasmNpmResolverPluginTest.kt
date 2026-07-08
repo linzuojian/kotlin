@@ -321,10 +321,10 @@ sealed class WasmNpmResolverPluginTest(
         assertTrue(
             notRegisteredAsInputs.isEmpty(),
             """
-                                |Task ${task.path} has npm dependencies lock files not registered as task inputs.
-                                |notRegisteredAsInputs:$notRegisteredAsInputs
-                                |allTaskInputs: $allTaskInputs
-                                """.trimMargin()
+            |Task ${task.path} has npm dependencies lock files not registered as task inputs.
+            |notRegisteredAsInputs:$notRegisteredAsInputs
+            |allTaskInputs: $allTaskInputs
+            """.trimMargin()
         )
     }
     //endregion
