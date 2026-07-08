@@ -9,7 +9,6 @@ import com.google.gson.GsonBuilder
 import jetbrains.buildServer.messages.serviceMessages.BaseTestSuiteMessage
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.internal.tasks.testing.TestResultProcessor
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -37,7 +36,6 @@ import org.jetbrains.kotlin.gradle.targets.js.testing.*
 import org.jetbrains.kotlin.gradle.targets.js.webTargetVariant
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.targets.wasm.internal.isWasm
-import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.web.nodejs.BaseNodeJsEnvSpec
 import org.jetbrains.kotlin.gradle.targets.web.nodejs.BaseNodeJsRootExtension
 import org.jetbrains.kotlin.gradle.utils.appendLine

@@ -6,10 +6,10 @@
 package org.jetbrains.kotlin.gradle.targets.js.nodejs
 
 import org.gradle.api.file.Directory
-import org.gradle.api.provider.Provider
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
 import org.gradle.work.NormalizeLineEndings
@@ -23,10 +23,9 @@ import org.jetbrains.kotlin.gradle.targets.js.ir.npmToolingDir
 import org.jetbrains.kotlin.gradle.targets.js.npm.NpmProjectModules
 import org.jetbrains.kotlin.gradle.targets.js.npm.RequiresNpmDependenciesTask
 import org.jetbrains.kotlin.gradle.targets.js.npm.npmProject
-import org.jetbrains.kotlin.gradle.targets.js.webTargetVariant
 import org.jetbrains.kotlin.gradle.targets.wasm.internal.isWasm
-import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsPlugin
 import org.jetbrains.kotlin.gradle.targets.wasm.nodejs.WasmNodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.web.nodejs.nodeJsEnvSpec
 import org.jetbrains.kotlin.gradle.tasks.registerTask
 import org.jetbrains.kotlin.gradle.utils.getFile
 import org.jetbrains.kotlin.gradle.utils.newFileProperty
@@ -116,19 +115,10 @@ constructor(
             val project = target.project
 
             val nodeJsRoot = compilation.nodeJsRoot()
-            val nodeJsEnvSpec = compilation.webTargetVariant(
-                { NodeJsPlugin.apply(project) },
-                { WasmNodeJsPlugin.apply(project) },
-            )
+            val nodeJsEnvSpec = compilation.nodeJsEnvSpec
 
             val npmProject = compilation.npmProject
-
             val npmToolingDir: Provider<Directory> = compilation.npmToolingDir()
-
-            val isWasm: Boolean = compilation.webTargetVariant(
-                jsVariant = false,
-                wasmVariant = true,
-            )
 
             return project.registerTask(
                 name,
@@ -149,7 +139,8 @@ constructor(
                     }
                 }
 
-                it.npmToolingEnvDir.fileProvider(npmToolingDir).disallowChanges()
+                it.npmToolingEnvDir.set(npmToolingDir)
+                it.npmToolingEnvDir.disallowChanges()
 
                 with(nodeJsEnvSpec) {
                     it.dependsOn(project.nodeJsSetupTaskProvider)
